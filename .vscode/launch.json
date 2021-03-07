@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "STM32L4 Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "./target/thumbv7em-none-eabihf/debug/superframe",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "configFiles": [
+                "openocd.cfg"
+            ],
+            "preLaunchTask": "rust: cargo build",
+            "preLaunchCommands": [
+                "load"
+            ]
+        }
+    ]
+}

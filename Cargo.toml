@@ -1,0 +1,24 @@
+[package]
+name = "superframe"
+version = "0.1.0"
+authors = ["Guillaume Cugnet <guillaume.cugnet@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
+cortex-m-rt = "0.6.13"
+cortex-m-rtic = "0.5.5"
+rtt-target = { version = "0.3.0", features = ["cortex-m"] }
+
+[dependencies.stm32l4xx-hal]
+git = "https://github.com/ejpcmac/stm32l4xx-hal.git"
+branch = "stm32l47x-adc"
+features = ["stm32l4x6", "rt"]
+
+# For `cargo fix` to work.
+[[bin]]
+name = "superframe"
+test = false
+bench = false
