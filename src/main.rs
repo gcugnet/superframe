@@ -93,7 +93,7 @@ const APP: () = {
     #[task(resources = [ws2812b])]
     fn leds_on(cx: leds_on::Context) {
         let ws2812b = cx.resources.ws2812b;
-        let sequence = Unicolor::new(GREEN, 5);
+        let sequence = Unicolor::new(PURPLE, 5);
         ws2812b.write(sequence).unwrap();
     }
 
