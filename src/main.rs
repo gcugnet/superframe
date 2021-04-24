@@ -2,6 +2,7 @@
 #![no_main]
 
 mod chaser;
+mod sequence;
 
 use panic_rtt_target as _;
 
@@ -14,9 +15,10 @@ use stm32l4xx_hal::pac::SPI2;
 use stm32l4xx_hal::prelude::*;
 use stm32l4xx_hal::spi::Spi;
 
+use smart_leds::{colors::*, SmartLedsWrite, RGB8};
 use ws2812_spi::Ws2812;
 
-use smart_leds::{brightness, colors::*, SmartLedsWrite, RGB8};
+use sequence::Unicolor;
 
 // on utilise un SPI2
 // la broche qui mintéresse : MOSI
@@ -91,16 +93,8 @@ const APP: () = {
     #[task(resources = [ws2812b])]
     fn leds_on(cx: leds_on::Context) {
         let ws2812b = cx.resources.ws2812b;
-        const NUM_LEDS: usize = 3;
-        let mut leds_state: [RGB8; NUM_LEDS] = [RGB8::default(); NUM_LEDS];
-
-        leds_state[0] = GOLD; //{ r: 0, g: 100, b: 0 };
-        leds_state[1] = FUCHSIA; //{ r: 0, g: 100, b: 0 };
-        leds_state[2] = AQUA; //{ r: 0, g: 0, b: 100 };
-                              //leds_state[3] = RGB8 { r: 0, g: 0, b: 10 };
-        ws2812b
-            .write(brightness(leds_state.iter().cloned(), 32))
-            .unwrap();
+        let sequence = Unicolor::new(GREEN, 5);
+        ws2812b.write(sequence).unwrap();
     }
 
     extern "C" {
