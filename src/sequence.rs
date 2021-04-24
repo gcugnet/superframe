@@ -1,3 +1,5 @@
+//! A collection of LED sequences on top of `smart_leds`.
+
 use smart_leds::RGB8;
 
 /// A sequence in which all LEDs have the same color.
