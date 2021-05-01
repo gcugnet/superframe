@@ -331,8 +331,7 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 [[package]]
 name = "smart-leds"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38dd45fa275f70b4110eac5f5182611ad384f88bb22b68b9a9c3cafd7015290b"
+source = "git+https://github.com/legrec14/smart-leds.git?branch=hsv-conversions#c5954894c3f9fb3ba8b1385e7f190ad48b6d7bc2"
 dependencies = [
  "smart-leds-trait",
 ]
