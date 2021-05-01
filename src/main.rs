@@ -15,10 +15,10 @@ use stm32l4xx_hal::pac::SPI2;
 use stm32l4xx_hal::prelude::*;
 use stm32l4xx_hal::spi::Spi;
 
-use smart_leds::{colors::*, SmartLedsWrite};
+use smart_leds::{colors::*, hsv::Hsv, SmartLedsWrite};
 use ws2812_spi::Ws2812;
 
-use sequence::{Rainbow, Unicolor};
+use sequence::{Gradient, Rainbow, Unicolor};
 
 // on utilise un SPI2
 // la broche qui mintéresse : MOSI
@@ -93,7 +93,7 @@ const APP: () = {
     #[task(resources = [ws2812b])]
     fn leds_on(cx: leds_on::Context) {
         let ws2812b = cx.resources.ws2812b;
-        let sequence = Rainbow::new(ORANGE, 30);
+        let sequence = Gradient::new(GREEN, BLUE, 20);
         ws2812b.write(sequence).unwrap();
     }
 
