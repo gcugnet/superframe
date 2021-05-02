@@ -21,7 +21,7 @@ impl Iterator for Rainbow {
                 ..self.first_color // sat: self.first_color.sat, val: self.first_color.val
             };
             self.counter += 1;
-            Some(smart_leds::hsv::hsv2rgb(color))
+            Some(color.into())
         } else {
             None
         }

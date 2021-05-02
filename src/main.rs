@@ -18,6 +18,7 @@ use stm32l4xx_hal::spi::Spi;
 use smart_leds::{brightness, colors::*, hsv::Hsv, SmartLedsWrite};
 use ws2812_spi::prerendered::Ws2812;
 
+use chaser::RainbowChaser;
 use sequence::{Gradient, Rainbow, Unicolor};
 
 // on utilise un SPI2
@@ -47,9 +48,11 @@ const APP: () = {
                 ),
             >,
         >,
+
+        chaser: RainbowChaser,
     }
 
-    #[init(schedule = [leds_on], resources = [led_buffer])]
+    #[init(schedule = [next_sequence], resources = [led_buffer])]
     fn init(cx: init::Context) -> init::LateResources {
         rtt_init_print!();
         rprintln!("superframe starting...");
@@ -87,9 +90,12 @@ const APP: () = {
         // Configure the LED strip driver (pilote).
         let ws2812b = Ws2812::new(spi, cx.resources.led_buffer);
 
-        cx.schedule.leds_on(cx.start + 4_000_000.cycles()).unwrap();
+        // Configure the chaser.
+        let chaser = RainbowChaser::new(ORANGE, NUM_LEDS, 750);
 
-        init::LateResources { ws2812b }
+        cx.schedule.next_sequence(cx.start).unwrap();
+
+        init::LateResources { ws2812b, chaser }
     }
 
     #[idle]
@@ -97,11 +103,17 @@ const APP: () = {
         loop {}
     }
 
-    #[task(resources = [ws2812b])]
-    fn leds_on(cx: leds_on::Context) {
+    #[task(resources = [ws2812b, chaser], schedule = [next_sequence])]
+    fn next_sequence(cx: next_sequence::Context) {
         let ws2812b = cx.resources.ws2812b;
-        let sequence = Gradient::new(GREEN, BLUE, NUM_LEDS as u8);
-        ws2812b.write(brightness(sequence, 2)).unwrap();
+        if let Some(sequence) = cx.resources.chaser.next() {
+            rprintln!("{:?}, cx.resources.chaser");
+            cx.schedule
+                .next_sequence(Instant::now() + 3_200_000.cycles())
+                .unwrap();
+
+            ws2812b.write(brightness(sequence, 70)).unwrap();
+        }
     }
 
     extern "C" {
