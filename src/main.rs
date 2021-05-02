@@ -15,8 +15,8 @@ use stm32l4xx_hal::pac::SPI2;
 use stm32l4xx_hal::prelude::*;
 use stm32l4xx_hal::spi::Spi;
 
-use smart_leds::{colors::*, hsv::Hsv, SmartLedsWrite};
-use ws2812_spi::Ws2812;
+use smart_leds::{brightness, colors::*, hsv::Hsv, SmartLedsWrite};
+use ws2812_spi::prerendered::Ws2812;
 
 use sequence::{Gradient, Rainbow, Unicolor};
 
@@ -27,10 +27,17 @@ use sequence::{Gradient, Rainbow, Unicolor};
 // MISO du SPI2 -> en PC2
 // SCLK du SPI2 -> PB10 (connecteur 25 sur CN10)
 
+const NUM_LEDS: usize = 25;
+const BUFFER_SIZE: usize = NUM_LEDS * 12 + 20;
+
 #[app(device = stm32l4xx_hal::pac, peripherals = true, monotonic = rtic::cyccnt::CYCCNT)]
 const APP: () = {
     struct Resources {
+        #[init([0; BUFFER_SIZE])]
+        led_buffer: [u8; BUFFER_SIZE],
+
         ws2812b: Ws2812<
+            'static,
             stm32l4xx_hal::spi::Spi<
                 SPI2,
                 (
@@ -42,7 +49,7 @@ const APP: () = {
         >,
     }
 
-    #[init(schedule = [leds_on])]
+    #[init(schedule = [leds_on], resources = [led_buffer])]
     fn init(cx: init::Context) -> init::LateResources {
         rtt_init_print!();
         rprintln!("superframe starting...");
@@ -78,7 +85,7 @@ const APP: () = {
         );
 
         // Configure the LED strip driver (pilote).
-        let ws2812b = Ws2812::new(spi);
+        let ws2812b = Ws2812::new(spi, cx.resources.led_buffer);
 
         cx.schedule.leds_on(cx.start + 4_000_000.cycles()).unwrap();
 
@@ -93,8 +100,8 @@ const APP: () = {
     #[task(resources = [ws2812b])]
     fn leds_on(cx: leds_on::Context) {
         let ws2812b = cx.resources.ws2812b;
-        let sequence = Gradient::new(GREEN, BLUE, 20);
-        ws2812b.write(sequence).unwrap();
+        let sequence = Gradient::new(GREEN, BLUE, NUM_LEDS as u8);
+        ws2812b.write(brightness(sequence, 2)).unwrap();
     }
 
     extern "C" {
