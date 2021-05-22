@@ -19,17 +19,17 @@ impl Iterator for RainbowChaser {
     type Item = Rainbow;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.step < self.step_number {
-            let color = Hsv {
-                hue: self.first_color.hue
-                    + ((self.step * 255) / self.step_number) as u8,
-                ..self.first_color // sat: self.first_color.sat, val: self.first_color.val
-            };
-            self.step += 1;
-            Some(Rainbow::new(color, self.led_number as u8))
-        } else {
-            None
+        if self.step == self.step_number {
+            self.step = 0;
         }
+
+        let color = Hsv {
+            hue: self.first_color.hue
+                + ((self.step * 255) / self.step_number) as u8,
+            ..self.first_color // sat: self.first_color.sat, val: self.first_color.val
+        };
+        self.step += 1;
+        Some(Rainbow::new(color, self.led_number as u8))
     }
 }
 

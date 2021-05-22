@@ -15,7 +15,7 @@ use stm32l4xx_hal::pac::SPI2;
 use stm32l4xx_hal::prelude::*;
 use stm32l4xx_hal::spi::Spi;
 
-use smart_leds::{brightness, colors::*, hsv::Hsv, SmartLedsWrite};
+use smart_leds::{brightness, colors::*, hsv::Hsv, SmartLedsWrite, RGB8};
 use ws2812_spi::prerendered::Ws2812;
 
 use chaser::RainbowChaser;
@@ -28,7 +28,16 @@ use sequence::{Gradient, Rainbow, Unicolor};
 // MISO du SPI2 -> en PC2
 // SCLK du SPI2 -> PB10 (connecteur 25 sur CN10)
 
-const NUM_LEDS: usize = 25;
+type Spi2 = stm32l4xx_hal::spi::Spi<
+    SPI2,
+    (
+        PB10<Alternate<AF5, Input<Floating>>>,
+        PC2<Alternate<AF5, Input<Floating>>>,
+        PC3<Alternate<AF5, Input<Floating>>>,
+    ),
+>;
+
+const NUM_LEDS: usize = 35;
 const BUFFER_SIZE: usize = NUM_LEDS * 12 + 20;
 
 #[app(device = stm32l4xx_hal::pac, peripherals = true, monotonic = rtic::cyccnt::CYCCNT)]
@@ -36,19 +45,7 @@ const APP: () = {
     struct Resources {
         #[init([0; BUFFER_SIZE])]
         led_buffer: [u8; BUFFER_SIZE],
-
-        ws2812b: Ws2812<
-            'static,
-            stm32l4xx_hal::spi::Spi<
-                SPI2,
-                (
-                    PB10<Alternate<AF5, Input<Floating>>>,
-                    PC2<Alternate<AF5, Input<Floating>>>,
-                    PC3<Alternate<AF5, Input<Floating>>>,
-                ),
-            >,
-        >,
-
+        ws2812b: Ws2812<'static, Spi2>,
         chaser: RainbowChaser,
     }
 
@@ -91,7 +88,7 @@ const APP: () = {
         let ws2812b = Ws2812::new(spi, cx.resources.led_buffer);
 
         // Configure the chaser.
-        let chaser = RainbowChaser::new(ORANGE, NUM_LEDS, 750);
+        let chaser = RainbowChaser::new(ORANGE, NUM_LEDS, 200);
 
         cx.schedule.next_sequence(cx.start).unwrap();
 
@@ -107,7 +104,6 @@ const APP: () = {
     fn next_sequence(cx: next_sequence::Context) {
         let ws2812b = cx.resources.ws2812b;
         if let Some(sequence) = cx.resources.chaser.next() {
-            rprintln!("{:?}, cx.resources.chaser");
             cx.schedule
                 .next_sequence(Instant::now() + 3_200_000.cycles())
                 .unwrap();
