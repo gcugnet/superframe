@@ -46,7 +46,7 @@ const APP: () = {
         #[init([0; BUFFER_SIZE])]
         led_buffer: [u8; BUFFER_SIZE],
         ws2812b: Ws2812<'static, Spi2>,
-        chaser: RainbowChaser,
+        chaser: RainbowChaser<Rainbow>,
     }
 
     #[init(schedule = [next_sequence], resources = [led_buffer])]
