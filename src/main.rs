@@ -46,6 +46,17 @@ type Spi2 = stm32l4xx_hal::spi::Spi<
     ),
 >;
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum Mode {
+    Unicolor,
+    Rainbow,
+}
+
+pub enum Chaser {
+    Unicolor(RainbowChaser<Unicolor<Hsv>>),
+    Rainbow(RainbowChaser<Rainbow>),
+}
+
 /// A basic Delay using `cortex_m::asm::delay`.
 struct BasicDelay {
     /// The AHB Frequency in Hz.
@@ -80,7 +91,8 @@ const APP: () = {
         #[init([0; BUFFER_SIZE])]
         led_buffer: [u8; BUFFER_SIZE],
         ws2812b: Ws2812<'static, Spi2>,
-        chaser: RainbowChaser<Rainbow>,
+        mode: Mode,
+        chaser: Chaser,
     }
 
     #[init(schedule = [next_sequence], resources = [led_buffer])]
@@ -144,7 +156,8 @@ const APP: () = {
             potentiometer2,
             potentiometer3,
             ws2812b,
-            chaser,
+            mode: Mode::Rainbow,
+            chaser: Chaser::Rainbow(chaser),
         }
     }
 
@@ -153,34 +166,97 @@ const APP: () = {
         loop {}
     }
 
-    #[task(resources = [ws2812b, chaser, adc, potentiometer1, potentiometer2], schedule = [next_sequence])]
+    #[task(
+        resources = [
+            ws2812b,
+            chaser,
+            adc,
+            potentiometer1,
+            potentiometer2,
+            potentiometer3,
+            mode,
+        ],
+        schedule = [next_sequence]
+    )]
     fn next_sequence(cx: next_sequence::Context) {
         let ws2812b = cx.resources.ws2812b;
         let adc = cx.resources.adc;
         let potentiometer1 = cx.resources.potentiometer1;
         let potentiometer2 = cx.resources.potentiometer2;
+        let potentiometer3 = cx.resources.potentiometer3;
 
+        let value3: u16 = adc.read(potentiometer3).unwrap();
         let value2: u16 = adc.read(potentiometer2).unwrap();
 
-        let step_number = (value2 / 10) + 15;
-        cx.resources.chaser.set_step_number(step_number.into());
-        rprintln!("Value: {}", step_number);
+        let mode = if value3 <= 2000 {
+            Mode::Unicolor
+        } else {
+            Mode::Rainbow
+        };
 
-        if let Some(sequence) = cx.resources.chaser.next() {
-            cx.schedule
-                .next_sequence(Instant::now() + 3_200_000.cycles())
-                .unwrap();
+        if mode != *cx.resources.mode {
+            *cx.resources.mode = mode;
+            *cx.resources.chaser = match mode {
+                Mode::Unicolor => {
+                    let chaser = RainbowChaser::<Unicolor<Hsv>>::new(
+                        ORANGE, NUM_LEDS, 200,
+                    );
+                    Chaser::Unicolor(chaser)
+                }
+                Mode::Rainbow => {
+                    let chaser =
+                        RainbowChaser::<Rainbow>::new(ORANGE, NUM_LEDS, 200);
+                    Chaser::Rainbow(chaser)
+                }
+            };
+        }
 
-            let value1: u16 = adc.read(potentiometer1).unwrap();
+        match cx.resources.chaser {
+            Chaser::Unicolor(chaser) => {
+                let step_number = (value2 / 10) + 15;
+                chaser.set_step_number(step_number.into());
+                rprintln!("Value: {}", step_number);
 
-            let brightness_value = (value1 / 15)
-                .saturating_sub(2)
-                .try_into()
-                .unwrap_or(u8::MAX);
+                if let Some(sequence) = chaser.next() {
+                    cx.schedule
+                        .next_sequence(Instant::now() + 3_200_000.cycles())
+                        .unwrap();
 
-            ws2812b
-                .write(brightness(sequence, brightness_value))
-                .unwrap();
+                    let value1: u16 = adc.read(potentiometer1).unwrap();
+
+                    let brightness_value = (value1 / 15)
+                        .saturating_sub(2)
+                        .try_into()
+                        .unwrap_or(u8::MAX);
+
+                    ws2812b
+                        .write(brightness(sequence, brightness_value))
+                        .unwrap();
+                }
+            }
+
+            Chaser::Rainbow(chaser) => {
+                let step_number = (value2 / 10) + 15;
+                chaser.set_step_number(step_number.into());
+                rprintln!("Value: {}", step_number);
+
+                if let Some(sequence) = chaser.next() {
+                    cx.schedule
+                        .next_sequence(Instant::now() + 3_200_000.cycles())
+                        .unwrap();
+
+                    let value1: u16 = adc.read(potentiometer1).unwrap();
+
+                    let brightness_value = (value1 / 15)
+                        .saturating_sub(2)
+                        .try_into()
+                        .unwrap_or(u8::MAX);
+
+                    ws2812b
+                        .write(brightness(sequence, brightness_value))
+                        .unwrap();
+                }
+            }
         }
     }
 
