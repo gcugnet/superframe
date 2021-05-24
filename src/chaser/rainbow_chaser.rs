@@ -66,4 +66,9 @@ impl<S: OneParameterSequence> RainbowChaser<S> {
             _sequence: PhantomData,
         }
     }
+
+    pub fn set_step_number(&mut self, step_number: usize) {
+        self.step = self.step * step_number / self.step_number;
+        self.step_number = step_number;
+    }
 }

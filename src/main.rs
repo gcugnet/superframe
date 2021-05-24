@@ -153,7 +153,7 @@ const APP: () = {
         loop {}
     }
 
-    #[task(resources = [ws2812b, chaser, adc, potentiometer1], schedule = [next_sequence])]
+    #[task(resources = [ws2812b, chaser, adc, potentiometer1, potentiometer2], schedule = [next_sequence])]
     fn next_sequence(cx: next_sequence::Context) {
         let ws2812b = cx.resources.ws2812b;
         if let Some(sequence) = cx.resources.chaser.next() {
@@ -163,12 +163,19 @@ const APP: () = {
 
             let adc = cx.resources.adc;
             let potentiometer1 = cx.resources.potentiometer1;
-            let value: u16 = adc.read(potentiometer1).unwrap();
-            let brightness_value =
-                (value / 15).saturating_sub(2).try_into().unwrap_or(u8::MAX);
-            if brightness_value != 0 {
-                rprintln!("Value: {}", brightness_value);
-            }
+            let potentiometer2 = cx.resources.potentiometer2;
+
+            let value1: u16 = adc.read(potentiometer1).unwrap();
+            let value2: u16 = adc.read(potentiometer2).unwrap();
+
+            let brightness_value = (value1 / 15)
+                .saturating_sub(2)
+                .try_into()
+                .unwrap_or(u8::MAX);
+
+            let step_number = (value2 / 10) + 15;
+            cx.resources.chaser.set_step_number(step_number.into());
+            rprintln!("Value: {}", step_number);
 
             ws2812b
                 .write(brightness(sequence, brightness_value))
