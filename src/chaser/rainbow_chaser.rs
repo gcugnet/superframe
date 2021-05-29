@@ -5,12 +5,12 @@
 
 use core::marker::PhantomData;
 
-use crate::sequence::{Rainbow, Unicolor};
+use crate::sequence::OneParameterSequence;
 use smart_leds::hsv::Hsv;
 use smart_leds::RGB8;
 
 /// A struct which defines the chaser.
-pub struct RainbowChaser<S: OneParameterSequence> {
+pub struct RainbowChaser<S: OneParameterSequence<Hsv>> {
     first_color: Hsv,
     led_number: usize,
     step_number: usize,
@@ -18,23 +18,7 @@ pub struct RainbowChaser<S: OneParameterSequence> {
     _sequence: PhantomData<S>,
 }
 
-pub trait OneParameterSequence {
-    fn new_sequence(color: Hsv, led_number: usize) -> Self;
-}
-
-impl OneParameterSequence for Unicolor<Hsv> {
-    fn new_sequence(color: Hsv, led_number: usize) -> Self {
-        Unicolor::new(color, led_number)
-    }
-}
-
-impl OneParameterSequence for Rainbow {
-    fn new_sequence(color: Hsv, led_number: usize) -> Self {
-        Rainbow::new(color, led_number as u8)
-    }
-}
-
-impl<S: OneParameterSequence> Iterator for RainbowChaser<S> {
+impl<S: OneParameterSequence<Hsv>> Iterator for RainbowChaser<S> {
     type Item = S;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -48,11 +32,11 @@ impl<S: OneParameterSequence> Iterator for RainbowChaser<S> {
             ..self.first_color // sat: self.first_color.sat, val: self.first_color.val
         };
         self.step += 1;
-        Some(S::new_sequence(color, self.led_number))
+        Some(S::new(color, self.led_number))
     }
 }
 
-impl<S: OneParameterSequence> RainbowChaser<S> {
+impl<S: OneParameterSequence<Hsv>> RainbowChaser<S> {
     pub fn new(
         first_color: impl Into<Hsv>,
         led_number: usize,

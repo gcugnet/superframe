@@ -7,3 +7,11 @@ mod unicolor;
 pub use gradient::Gradient;
 pub use rainbow::Rainbow;
 pub use unicolor::Unicolor;
+
+/// A LED sequence.
+pub trait Sequence: Iterator {}
+
+/// A LED sequence with one parameter.
+pub trait OneParameterSequence<Color>: Sequence {
+    fn new(color: Color, led_number: usize) -> Self;
+}

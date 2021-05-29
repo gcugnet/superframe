@@ -1,5 +1,7 @@
 use smart_leds::RGB8;
 
+use super::Sequence;
+
 /// A sequence in which the LEDs draw a gradient.
 pub struct Gradient {
     /// The departure color of the gradient.
@@ -11,6 +13,8 @@ pub struct Gradient {
     /// The counter.
     counter: u8,
 }
+
+impl Sequence for Gradient {}
 
 impl Iterator for Gradient {
     type Item = RGB8;
