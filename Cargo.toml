@@ -30,3 +30,9 @@ features = ["stm32l4x6", "rt"]
 name = "superframe"
 test = false
 bench = false
+
+[profile.release]
+opt-level = "s"
+codegen-units = 1
+lto = true
+debug = true
