@@ -387,6 +387,7 @@ dependencies = [
  "cortex-m-rt",
  "cortex-m-rtic",
  "embedded-hal",
+ "nb 1.0.0",
  "panic-rtt-target",
  "rtt-target 0.3.0",
  "smart-leds",

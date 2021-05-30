@@ -14,9 +14,10 @@ use core::convert::TryInto;
 use embedded_hal::blocking::delay::DelayUs;
 use rtt_target::{rprintln, rtt_init_print};
 use stm32l4xx_hal::{
-    adc::ADC,
+    adc::{Channel, ADC},
     gpio::{
-        Alternate, Analog, Floating, Input, AF5, PA0, PA1, PA4, PB10, PC2, PC3,
+        Alternate, Analog, AnalogPin, Floating, Input, AF5, PA0, PA1, PA4,
+        PB10, PC2, PC3,
     },
     pac::SPI2,
     prelude::*,
@@ -75,8 +76,21 @@ impl DelayUs<u32> for BasicDelay {
     }
 }
 
+trait AdcExt<C: AnalogPin + Channel> {
+    fn read_mean(&mut self, channel: &mut C, iterations: u16) -> u16;
+}
+
+impl<C: AnalogPin + Channel> AdcExt<C> for ADC {
+    fn read_mean(&mut self, channel: &mut C, iterations: u16) -> u16 {
+        ((0..iterations)
+            .fold(0, |sum: u32, _| sum + self.read(channel).unwrap() as u32)
+            / iterations as u32) as u16
+    }
+}
+
 const NUM_LEDS: usize = 35;
 const BUFFER_SIZE: usize = NUM_LEDS * 12 + 20;
+const MEAN_ITERATIONS: u16 = 200;
 
 #[app(device = stm32l4xx_hal::pac, peripherals = true, monotonic = rtic::cyccnt::CYCCNT)]
 const APP: () = {
@@ -160,7 +174,9 @@ const APP: () = {
 
     #[idle]
     fn idle(_: idle::Context) -> ! {
-        loop {}
+        loop {
+            continue;
+        }
     }
 
     #[task(
@@ -182,8 +198,8 @@ const APP: () = {
         let potentiometer2 = cx.resources.potentiometer2;
         let potentiometer3 = cx.resources.potentiometer3;
 
-        let value3: u16 = adc.read(potentiometer3).unwrap();
-        let value2: u16 = adc.read(potentiometer2).unwrap();
+        let value3: u16 = adc.read_mean(potentiometer3, MEAN_ITERATIONS);
+        let value2: u16 = adc.read_mean(potentiometer2, MEAN_ITERATIONS);
 
         let mode = if value3 <= 2000 {
             Mode::Unicolor
@@ -206,21 +222,22 @@ const APP: () = {
 
         let chaser = cx.resources.chaser;
 
-        let step_number = (value2 / 10) + 15;
+        let step_number = (value2 / 5) + 15;
         chaser.set_step_number(step_number.into());
-        rprintln!("Value: {}", step_number);
 
         if let Some(sequence) = chaser.next() {
             cx.schedule
-                .next_sequence(Instant::now() + 3_200_000.cycles())
+                .next_sequence(Instant::now() + 1_600_000.cycles())
                 .unwrap();
 
-            let value1: u16 = adc.read(potentiometer1).unwrap();
+            let value1: u16 = adc.read_mean(potentiometer1, MEAN_ITERATIONS);
 
             let brightness_value = (value1 / 15)
                 .saturating_sub(2)
                 .try_into()
                 .unwrap_or(u8::MAX);
+
+            rprintln!("Brightness: {}", brightness_value);
 
             ws2812b
                 .write(brightness(sequence, brightness_value))
