@@ -27,7 +27,9 @@ use stm32l4xx_hal::{
 use smart_leds::{brightness, colors::*, hsv::Hsv, SmartLedsWrite, RGB8};
 use ws2812_spi::prerendered::Ws2812;
 
-use chaser::RainbowChaser;
+use chaser::{
+    Chaser, OneParameterChaser, OneParameterChaserEnum, RainbowChaser,
+};
 use sequence::{Gradient, Rainbow, Unicolor};
 
 // on utilise un SPI2
@@ -50,11 +52,6 @@ type Spi2 = stm32l4xx_hal::spi::Spi<
 pub enum Mode {
     Unicolor,
     Rainbow,
-}
-
-pub enum Chaser {
-    Unicolor(RainbowChaser<Unicolor<Hsv>>),
-    Rainbow(RainbowChaser<Rainbow>),
 }
 
 /// A basic Delay using `cortex_m::asm::delay`.
@@ -92,7 +89,7 @@ const APP: () = {
         led_buffer: [u8; BUFFER_SIZE],
         ws2812b: Ws2812<'static, Spi2>,
         mode: Mode,
-        chaser: Chaser,
+        chaser: OneParameterChaserEnum,
     }
 
     #[init(schedule = [next_sequence], resources = [led_buffer])]
@@ -157,7 +154,7 @@ const APP: () = {
             potentiometer3,
             ws2812b,
             mode: Mode::Rainbow,
-            chaser: Chaser::Rainbow(chaser),
+            chaser: OneParameterChaserEnum::Rainbow(chaser),
         }
     }
 
@@ -201,18 +198,18 @@ const APP: () = {
                     let chaser = RainbowChaser::<Unicolor<Hsv>>::new(
                         ORANGE, NUM_LEDS, 200,
                     );
-                    Chaser::Unicolor(chaser)
+                    OneParameterChaserEnum::Unicolor(chaser)
                 }
                 Mode::Rainbow => {
                     let chaser =
                         RainbowChaser::<Rainbow>::new(ORANGE, NUM_LEDS, 200);
-                    Chaser::Rainbow(chaser)
+                    OneParameterChaserEnum::Rainbow(chaser)
                 }
             };
         }
 
         match cx.resources.chaser {
-            Chaser::Unicolor(chaser) => {
+            OneParameterChaserEnum::Unicolor(chaser) => {
                 let step_number = (value2 / 10) + 15;
                 chaser.set_step_number(step_number.into());
                 rprintln!("Value: {}", step_number);
@@ -235,7 +232,7 @@ const APP: () = {
                 }
             }
 
-            Chaser::Rainbow(chaser) => {
+            OneParameterChaserEnum::Rainbow(chaser) => {
                 let step_number = (value2 / 10) + 15;
                 chaser.set_step_number(step_number.into());
                 rprintln!("Value: {}", step_number);
