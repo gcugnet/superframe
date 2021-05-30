@@ -195,65 +195,36 @@ const APP: () = {
             *cx.resources.mode = mode;
             *cx.resources.chaser = match mode {
                 Mode::Unicolor => {
-                    let chaser = RainbowChaser::<Unicolor<Hsv>>::new(
-                        ORANGE, NUM_LEDS, 200,
-                    );
-                    OneParameterChaserEnum::Unicolor(chaser)
+                    RainbowChaser::<Unicolor<Hsv>>::new(ORANGE, NUM_LEDS, 200)
+                        .into()
                 }
                 Mode::Rainbow => {
-                    let chaser =
-                        RainbowChaser::<Rainbow>::new(ORANGE, NUM_LEDS, 200);
-                    OneParameterChaserEnum::Rainbow(chaser)
+                    RainbowChaser::<Rainbow>::new(ORANGE, NUM_LEDS, 200).into()
                 }
             };
         }
 
-        match cx.resources.chaser {
-            OneParameterChaserEnum::Unicolor(chaser) => {
-                let step_number = (value2 / 10) + 15;
-                chaser.set_step_number(step_number.into());
-                rprintln!("Value: {}", step_number);
+        let chaser = cx.resources.chaser;
 
-                if let Some(sequence) = chaser.next() {
-                    cx.schedule
-                        .next_sequence(Instant::now() + 3_200_000.cycles())
-                        .unwrap();
+        let step_number = (value2 / 10) + 15;
+        chaser.set_step_number(step_number.into());
+        rprintln!("Value: {}", step_number);
 
-                    let value1: u16 = adc.read(potentiometer1).unwrap();
+        if let Some(sequence) = chaser.next() {
+            cx.schedule
+                .next_sequence(Instant::now() + 3_200_000.cycles())
+                .unwrap();
 
-                    let brightness_value = (value1 / 15)
-                        .saturating_sub(2)
-                        .try_into()
-                        .unwrap_or(u8::MAX);
+            let value1: u16 = adc.read(potentiometer1).unwrap();
 
-                    ws2812b
-                        .write(brightness(sequence, brightness_value))
-                        .unwrap();
-                }
-            }
+            let brightness_value = (value1 / 15)
+                .saturating_sub(2)
+                .try_into()
+                .unwrap_or(u8::MAX);
 
-            OneParameterChaserEnum::Rainbow(chaser) => {
-                let step_number = (value2 / 10) + 15;
-                chaser.set_step_number(step_number.into());
-                rprintln!("Value: {}", step_number);
-
-                if let Some(sequence) = chaser.next() {
-                    cx.schedule
-                        .next_sequence(Instant::now() + 3_200_000.cycles())
-                        .unwrap();
-
-                    let value1: u16 = adc.read(potentiometer1).unwrap();
-
-                    let brightness_value = (value1 / 15)
-                        .saturating_sub(2)
-                        .try_into()
-                        .unwrap_or(u8::MAX);
-
-                    ws2812b
-                        .write(brightness(sequence, brightness_value))
-                        .unwrap();
-                }
-            }
+            ws2812b
+                .write(brightness(sequence, brightness_value))
+                .unwrap();
         }
     }
 
