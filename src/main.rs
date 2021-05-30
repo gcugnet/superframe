@@ -88,7 +88,9 @@ impl<C: AnalogPin + Channel> AdcExt<C> for ADC {
     }
 }
 
-const NUM_LEDS: usize = 35;
+const WIDTH: usize = 40;
+const HEIGHT: usize = 56;
+const NUM_LEDS: usize = (WIDTH + HEIGHT) * 2;
 const BUFFER_SIZE: usize = NUM_LEDS * 12 + 20;
 const MEAN_ITERATIONS: u16 = 200;
 
