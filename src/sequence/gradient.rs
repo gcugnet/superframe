@@ -1,6 +1,6 @@
 use smart_leds::RGB8;
 
-use super::Sequence;
+use super::{Sequence, TwoParameterSequence};
 
 /// A sequence in which the LEDs draw a gradient.
 pub struct Gradient<const N: usize> {
@@ -13,6 +13,19 @@ pub struct Gradient<const N: usize> {
 }
 
 impl<const N: usize> Sequence<N> for Gradient<N> {}
+
+impl<Color: Into<RGB8>, const N: usize> TwoParameterSequence<Color, N>
+    for Gradient<N>
+{
+    /// Create a new gradient sequence.
+    fn new(start_color: Color, end_color: Color) -> Self {
+        Self {
+            start_color: start_color.into(),
+            end_color: end_color.into(),
+            counter: 0,
+        }
+    }
+}
 
 impl<const N: usize> Iterator for Gradient<N> {
     type Item = RGB8;
@@ -43,20 +56,6 @@ impl<const N: usize> Iterator for Gradient<N> {
             Some(color)
         } else {
             None
-        }
-    }
-}
-
-impl<const N: usize> Gradient<N> {
-    /// Create a new gradient sequence.
-    pub fn new(
-        start_color: impl Into<RGB8>,
-        end_color: impl Into<RGB8>,
-    ) -> Self {
-        Self {
-            start_color: start_color.into(),
-            end_color: end_color.into(),
-            counter: 0,
         }
     }
 }

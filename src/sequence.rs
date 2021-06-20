@@ -18,6 +18,11 @@ pub trait OneParameterSequence<Color, const N: usize>: Sequence<N> {
     fn new(color: Color) -> Self;
 }
 
+/// A LED sequence with two parameters.
+pub trait TwoParameterSequence<Color, const N: usize>: Sequence<N> {
+    fn new(color1: Color, color2: Color) -> Self;
+}
+
 /// Container enum for one-parameter sequences.
 pub enum OneParameterSequenceEnum<const N: usize> {
     Unicolor(Unicolor<Hsv, N>),
