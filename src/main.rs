@@ -105,7 +105,7 @@ const APP: () = {
         led_buffer: [u8; BUFFER_SIZE],
         ws2812b: Ws2812<'static, Spi2>,
         mode: Mode,
-        chaser: OneParameterChaserEnum,
+        chaser: OneParameterChaserEnum<NUM_LEDS>,
     }
 
     #[init(schedule = [next_sequence], resources = [led_buffer])]
@@ -159,7 +159,7 @@ const APP: () = {
         let ws2812b = Ws2812::new(spi, cx.resources.led_buffer);
 
         // Configure the chaser.
-        let chaser = RainbowChaser::new(ORANGE, NUM_LEDS, 200);
+        let chaser = RainbowChaser::new(ORANGE, 200);
 
         cx.schedule.next_sequence(cx.start).unwrap();
 
@@ -212,13 +212,12 @@ const APP: () = {
         if mode != *cx.resources.mode {
             *cx.resources.mode = mode;
             *cx.resources.chaser = match mode {
-                Mode::Unicolor => {
-                    RainbowChaser::<Unicolor<Hsv>>::new(ORANGE, NUM_LEDS, 200)
-                        .into()
-                }
-                Mode::Rainbow => {
-                    RainbowChaser::<Rainbow>::new(ORANGE, NUM_LEDS, 200).into()
-                }
+                Mode::Unicolor => OneParameterChaserEnum::Unicolor(
+                    RainbowChaser::new(ORANGE, 200),
+                ),
+                Mode::Rainbow => OneParameterChaserEnum::Rainbow(
+                    RainbowChaser::new(ORANGE, 200),
+                ),
             };
         }
 

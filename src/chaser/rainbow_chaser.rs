@@ -11,28 +11,28 @@ use super::{Chaser, OneParameterChaser};
 use crate::sequence::OneParameterSequence;
 
 /// A struct which defines the chaser.
-pub struct RainbowChaser<S: OneParameterSequence<Hsv>> {
+pub struct RainbowChaser<S: OneParameterSequence<Hsv, N>, const N: usize> {
     first_color: Hsv,
-    led_number: usize,
     step_number: usize,
     step: usize,
     _sequence: PhantomData<S>,
 }
 
-impl<S: OneParameterSequence<Hsv>> Chaser for RainbowChaser<S> {
+impl<S: OneParameterSequence<Hsv, N>, const N: usize> Chaser<N>
+    for RainbowChaser<S, N>
+{
     fn set_step_number(&mut self, step_number: usize) {
         self.step = self.step * step_number / self.step_number;
         self.step_number = step_number;
     }
 }
 
-impl<Color: Into<Hsv>, S: OneParameterSequence<Hsv>> OneParameterChaser<Color>
-    for RainbowChaser<S>
+impl<Color: Into<Hsv>, S: OneParameterSequence<Hsv, N>, const N: usize>
+    OneParameterChaser<Color, N> for RainbowChaser<S, N>
 {
-    fn new(first_color: Color, led_number: usize, step_number: usize) -> Self {
+    fn new(first_color: Color, step_number: usize) -> Self {
         Self {
             first_color: first_color.into(),
-            led_number,
             step_number,
             step: 0,
             _sequence: PhantomData,
@@ -40,7 +40,9 @@ impl<Color: Into<Hsv>, S: OneParameterSequence<Hsv>> OneParameterChaser<Color>
     }
 }
 
-impl<S: OneParameterSequence<Hsv>> Iterator for RainbowChaser<S> {
+impl<S: OneParameterSequence<Hsv, N>, const N: usize> Iterator
+    for RainbowChaser<S, N>
+{
     type Item = S;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -54,6 +56,6 @@ impl<S: OneParameterSequence<Hsv>> Iterator for RainbowChaser<S> {
             ..self.first_color // sat: self.first_color.sat, val: self.first_color.val
         };
         self.step += 1;
-        Some(S::new(color, self.led_number))
+        Some(S::new(color))
     }
 }

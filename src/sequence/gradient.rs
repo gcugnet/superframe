@@ -3,41 +3,39 @@ use smart_leds::RGB8;
 use super::Sequence;
 
 /// A sequence in which the LEDs draw a gradient.
-pub struct Gradient {
+pub struct Gradient<const N: usize> {
     /// The departure color of the gradient.
     start_color: RGB8,
     /// The arrival color of the gradient.
     end_color: RGB8,
-    /// The number of LEDs.
-    number: u8,
     /// The counter.
-    counter: u8,
+    counter: usize,
 }
 
-impl Sequence for Gradient {}
+impl<const N: usize> Sequence<N> for Gradient<N> {}
 
-impl Iterator for Gradient {
+impl<const N: usize> Iterator for Gradient<N> {
     type Item = RGB8;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.counter < self.number {
+        if self.counter < N {
             let color = RGB8 {
                 r: gradient_step(
                     self.start_color.r,
                     self.end_color.r,
-                    self.number,
+                    N,
                     self.counter,
                 ),
                 g: gradient_step(
                     self.start_color.g,
                     self.end_color.g,
-                    self.number,
+                    N,
                     self.counter,
                 ),
                 b: gradient_step(
                     self.start_color.b,
                     self.end_color.b,
-                    self.number,
+                    N,
                     self.counter,
                 ),
             };
@@ -49,23 +47,21 @@ impl Iterator for Gradient {
     }
 }
 
-impl Gradient {
+impl<const N: usize> Gradient<N> {
     /// Create a new gradient sequence.
     pub fn new(
         start_color: impl Into<RGB8>,
         end_color: impl Into<RGB8>,
-        number: u8,
     ) -> Self {
         Self {
             start_color: start_color.into(),
             end_color: end_color.into(),
-            number,
             counter: 0,
         }
     }
 }
 
-fn gradient_step(start: u8, end: u8, led_number: u8, step: u8) -> u8 {
+fn gradient_step(start: u8, end: u8, led_number: usize, step: usize) -> u8 {
     let start_i16 = start as i16;
     let end_i16 = end as i16;
     let step_i16 = step as i16;

@@ -8,34 +8,38 @@ use crate::sequence::{OneParameterSequenceEnum, Rainbow, Unicolor};
 use smart_leds::hsv::Hsv;
 
 /// A LED chaser.
-pub trait Chaser: Iterator {
+pub trait Chaser<const N: usize>: Iterator {
     fn set_step_number(&mut self, step_number: usize);
 }
 
 /// A LED chaser with one parameter.
-pub trait OneParameterChaser<Color>: Chaser {
-    fn new(first_color: Color, led_number: usize, step_number: usize) -> Self;
+pub trait OneParameterChaser<Color, const N: usize>: Chaser<N> {
+    fn new(first_color: Color, step_number: usize) -> Self;
 }
 
 /// Container enum for one-parameter chasers.
-pub enum OneParameterChaserEnum {
-    Unicolor(RainbowChaser<Unicolor<Hsv>>),
-    Rainbow(RainbowChaser<Rainbow>),
+pub enum OneParameterChaserEnum<const N: usize> {
+    Unicolor(RainbowChaser<Unicolor<Hsv, N>, N>),
+    Rainbow(RainbowChaser<Rainbow<N>, N>),
 }
 
-impl From<RainbowChaser<Unicolor<Hsv>>> for OneParameterChaserEnum {
-    fn from(chaser: RainbowChaser<Unicolor<Hsv>>) -> Self {
+impl<const N: usize> From<RainbowChaser<Unicolor<Hsv, N>, N>>
+    for OneParameterChaserEnum<N>
+{
+    fn from(chaser: RainbowChaser<Unicolor<Hsv, N>, N>) -> Self {
         OneParameterChaserEnum::Unicolor(chaser)
     }
 }
 
-impl From<RainbowChaser<Rainbow>> for OneParameterChaserEnum {
-    fn from(chaser: RainbowChaser<Rainbow>) -> Self {
+impl<const N: usize> From<RainbowChaser<Rainbow<N>, N>>
+    for OneParameterChaserEnum<N>
+{
+    fn from(chaser: RainbowChaser<Rainbow<N>, N>) -> Self {
         OneParameterChaserEnum::Rainbow(chaser)
     }
 }
 
-impl Chaser for OneParameterChaserEnum {
+impl<const N: usize> Chaser<N> for OneParameterChaserEnum<N> {
     fn set_step_number(&mut self, step_number: usize) {
         match self {
             OneParameterChaserEnum::Unicolor(chaser) => {
@@ -48,18 +52,19 @@ impl Chaser for OneParameterChaserEnum {
     }
 }
 
-impl<Color: Into<Hsv>> OneParameterChaser<Color> for OneParameterChaserEnum {
-    fn new(first_color: Color, led_number: usize, step_number: usize) -> Self {
+impl<Color: Into<Hsv>, const N: usize> OneParameterChaser<Color, N>
+    for OneParameterChaserEnum<N>
+{
+    fn new(first_color: Color, step_number: usize) -> Self {
         OneParameterChaserEnum::Unicolor(RainbowChaser::new(
             first_color,
-            led_number,
             step_number,
         ))
     }
 }
 
-impl Iterator for OneParameterChaserEnum {
-    type Item = OneParameterSequenceEnum;
+impl<const N: usize> Iterator for OneParameterChaserEnum<N> {
+    type Item = OneParameterSequenceEnum<N>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
