@@ -33,22 +33,19 @@ impl<const N: usize> Iterator for Gradient<N> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.counter < N {
             let color = RGB8 {
-                r: gradient_step(
+                r: gradient_step::<N>(
                     self.start_color.r,
                     self.end_color.r,
-                    N,
                     self.counter,
                 ),
-                g: gradient_step(
+                g: gradient_step::<N>(
                     self.start_color.g,
                     self.end_color.g,
-                    N,
                     self.counter,
                 ),
-                b: gradient_step(
+                b: gradient_step::<N>(
                     self.start_color.b,
                     self.end_color.b,
-                    N,
                     self.counter,
                 ),
             };
@@ -60,11 +57,11 @@ impl<const N: usize> Iterator for Gradient<N> {
     }
 }
 
-fn gradient_step(start: u8, end: u8, led_number: usize, step: usize) -> u8 {
+fn gradient_step<const N: usize>(start: u8, end: u8, step: usize) -> u8 {
     let start_i16 = start as i16;
     let end_i16 = end as i16;
     let step_i16 = step as i16;
-    let led_number = led_number as i16;
+    let led_number = N as i16;
 
     (start_i16 + (step_i16 * (end_i16 - start_i16)) / (led_number - 1)) as u8
 }
