@@ -1,8 +1,3 @@
-//! A static parameter of the lights will be name below a "sequence".
-//! The parade of multiple sequences will be named below as a "chaser".
-//! The transition parameters between two sequences will be named below as an "effect".
-//! The chaser is composed by sequences and effects.
-
 use core::marker::PhantomData;
 
 use smart_leds::hsv::Hsv;
@@ -10,11 +5,16 @@ use smart_leds::hsv::Hsv;
 use super::{Chaser, OneParameterChaser};
 use crate::sequence::OneParameterSequence;
 
-/// A struct which defines the chaser.
+/// A chaser that loops on the wheel of hues.
 pub struct RainbowChaser<S: OneParameterSequence<Hsv, N>, const N: usize> {
-    first_color: Hsv,
+    /// The start color.
+    start_color: Hsv,
+    /// The number of steps in a loop.
     step_number: usize,
+    /// The current step.
     step: usize,
+
+    // Placeholder for the sequence type.
     _sequence: PhantomData<S>,
 }
 
@@ -30,9 +30,9 @@ impl<S: OneParameterSequence<Hsv, N>, const N: usize> Chaser<N>
 impl<Color: Into<Hsv>, S: OneParameterSequence<Hsv, N>, const N: usize>
     OneParameterChaser<Color, N> for RainbowChaser<S, N>
 {
-    fn new(first_color: Color, step_number: usize) -> Self {
+    fn new(start_color: Color, step_number: usize) -> Self {
         Self {
-            first_color: first_color.into(),
+            start_color: start_color.into(),
             step_number,
             step: 0,
             _sequence: PhantomData,
@@ -51,9 +51,9 @@ impl<S: OneParameterSequence<Hsv, N>, const N: usize> Iterator
         }
 
         let color = Hsv {
-            hue: self.first_color.hue
+            hue: self.start_color.hue
                 + ((self.step * 255) / self.step_number) as u8,
-            ..self.first_color // sat: self.first_color.sat, val: self.first_color.val
+            ..self.start_color // sat: self.start_color.sat, val: self.start_color.val
         };
         self.step += 1;
         Some(S::new(color))

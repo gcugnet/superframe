@@ -17,7 +17,6 @@ impl<const N: usize> Sequence<N> for Gradient<N> {}
 impl<Color: Into<RGB8>, const N: usize> TwoParameterSequence<Color, N>
     for Gradient<N>
 {
-    /// Create a new gradient sequence.
     fn new(start_color: Color, end_color: Color) -> Self {
         Self {
             start_color: start_color.into(),

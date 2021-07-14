@@ -14,7 +14,7 @@ pub trait Chaser<const N: usize>: Iterator {
 
 /// A LED chaser with one parameter.
 pub trait OneParameterChaser<Color, const N: usize>: Chaser<N> {
-    fn new(first_color: Color, step_number: usize) -> Self;
+    fn new(start_color: Color, step_number: usize) -> Self;
 }
 
 /// Container enum for one-parameter chasers.
@@ -55,9 +55,9 @@ impl<const N: usize> Chaser<N> for OneParameterChaserEnum<N> {
 impl<Color: Into<Hsv>, const N: usize> OneParameterChaser<Color, N>
     for OneParameterChaserEnum<N>
 {
-    fn new(first_color: Color, step_number: usize) -> Self {
+    fn new(start_color: Color, step_number: usize) -> Self {
         OneParameterChaserEnum::Unicolor(RainbowChaser::new(
-            first_color,
+            start_color,
             step_number,
         ))
     }
