@@ -1,9 +1,6 @@
 #![no_std]
 #![no_main]
 
-mod chaser;
-mod sequence;
-
 use panic_rtt_target as _;
 
 use rtic::app;
@@ -28,10 +25,10 @@ use stm32l4xx_hal::{
 use smart_leds::{brightness, colors::*, hsv::Hsv, SmartLedsWrite, RGB8};
 use ws2812_spi::prerendered::Ws2812;
 
-use chaser::{
+use led_effects::chaser::{
     Chaser, OneParameterChaser, OneParameterChaserEnum, RainbowChaser,
 };
-use sequence::{Gradient, Rainbow, Unicolor};
+use led_effects::sequence::{Gradient, Rainbow, Unicolor};
 
 // on utilise un SPI2
 // la broche qui mintéresse : MOSI

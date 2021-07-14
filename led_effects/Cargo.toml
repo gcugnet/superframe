@@ -1,0 +1,14 @@
+[package]
+name = "led_effects"
+version = "0.1.0"
+authors = ["Guillaume Cugnet <guillaume.cugnet@gmail.com>"]
+edition = "2018"
+
+[dependencies.smart-leds]
+git = "https://github.com/legrec14/smart-leds.git"
+branch = "hsv-conversions"
+
+# For `cargo fix` to work.
+[lib]
+test = false
+bench = false
