@@ -14,6 +14,12 @@ embedded-time = "0.12.0"
 git = "https://github.com/legrec14/smart-leds.git"
 branch = "hsv-conversions"
 
+[dependencies.rand]
+version = "0.8.4"
+default-features = false
+features = ["small_rng"]
+optional = true
+
 # For `cargo fix` to work.
 [lib]
 test = false

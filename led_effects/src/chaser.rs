@@ -3,15 +3,30 @@
 mod rainbow_chaser;
 mod unicolor_transition;
 
+#[cfg(feature = "rand")]
+mod random_unicolor;
+
 pub use rainbow_chaser::RainbowChaser;
 pub use unicolor_transition::UnicolorTransition;
+
+#[cfg(feature = "rand")]
+pub use random_unicolor::RandomUnicolor;
 
 use crate::{
     sequence::{OneParameterSequenceEnum, Rainbow, Unicolor},
     time::TimeConfig,
 };
 
+#[cfg(feature = "rand")]
+use embedded_time::rate::Hertz;
+
+#[cfg(feature = "rand")]
+use rand::distributions::Uniform;
+
 use smart_leds::hsv::Hsv;
+
+#[cfg(feature = "rand")]
+use rand::distributions::Distribution;
 
 /// A LED chaser.
 pub trait Chaser<const N: usize>: Iterator {
@@ -28,9 +43,19 @@ pub trait TwoParameterChaser<Color, const N: usize>: Chaser<N> {
     fn new(color1: Color, color2: Color, time_config: &TimeConfig) -> Self;
 }
 
+/// A LED chaser with a simple random progression.
+#[cfg(feature = "rand")]
+pub trait SimpleRandomChaser<D: Distribution<u32>, const N: usize>:
+    Chaser<N>
+{
+    fn new(refresh_rate: Hertz, transition_time_distr: D) -> Self;
+}
+
 /// Container enum for one-parameter chasers.
 pub enum ChaserEnum<const N: usize> {
     RainbowUnicolor(RainbowChaser<Unicolor<Hsv, N>, N>),
+    #[cfg(feature = "rand")]
+    RandomUnicolor(RandomUnicolor<Uniform<u32>, N>),
     DoubleRainbow(RainbowChaser<Rainbow<N>, N>),
 }
 
@@ -54,6 +79,10 @@ impl<const N: usize> Chaser<N> for ChaserEnum<N> {
             ChaserEnum::RainbowUnicolor(chaser) => {
                 chaser.set_time_config(time_config)
             }
+            #[cfg(feature = "rand")]
+            ChaserEnum::RandomUnicolor(chaser) => {
+                chaser.set_time_config(time_config)
+            }
             ChaserEnum::DoubleRainbow(chaser) => {
                 chaser.set_time_config(time_config)
             }
@@ -69,6 +98,8 @@ impl<const N: usize> Iterator for ChaserEnum<N> {
             ChaserEnum::RainbowUnicolor(chaser) => {
                 chaser.next().map(Into::into)
             }
+            #[cfg(feature = "rand")]
+            ChaserEnum::RandomUnicolor(chaser) => chaser.next().map(Into::into),
             ChaserEnum::DoubleRainbow(chaser) => chaser.next().map(Into::into),
         }
     }
