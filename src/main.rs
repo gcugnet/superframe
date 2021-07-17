@@ -27,9 +27,7 @@ use embedded_time::{
     rate::Hertz,
 };
 use led_effects::{
-    chaser::{
-        Chaser, OneParameterChaser, OneParameterChaserEnum, RainbowChaser,
-    },
+    chaser::{Chaser, ChaserEnum, OneParameterChaser, RainbowChaser},
     time::TimeConfig,
 };
 use smart_leds::{brightness, colors::*, SmartLedsWrite};
@@ -108,7 +106,7 @@ const APP: () = {
         led_buffer: [u8; BUFFER_SIZE],
         ws2812b: Ws2812<'static, Spi2>,
         mode: Mode,
-        chaser: OneParameterChaserEnum<NUM_LEDS>,
+        chaser: ChaserEnum<NUM_LEDS>,
         time_config: TimeConfig,
         clocks: Clocks,
     }
@@ -176,7 +174,7 @@ const APP: () = {
             potentiometer3,
             ws2812b,
             mode: Mode::Rainbow,
-            chaser: OneParameterChaserEnum::Rainbow(chaser),
+            chaser: ChaserEnum::DoubleRainbow(chaser),
             time_config,
             clocks,
         }
@@ -224,12 +222,13 @@ const APP: () = {
         if mode != *cx.resources.mode {
             *cx.resources.mode = mode;
             *cx.resources.chaser = match mode {
-                Mode::Unicolor => OneParameterChaserEnum::Unicolor(
+                Mode::Unicolor => ChaserEnum::RainbowUnicolor(
                     RainbowChaser::new(ORANGE, time_config),
                 ),
-                Mode::Rainbow => OneParameterChaserEnum::Rainbow(
-                    RainbowChaser::new(ORANGE, time_config),
-                ),
+                Mode::Rainbow => ChaserEnum::DoubleRainbow(RainbowChaser::new(
+                    ORANGE,
+                    time_config,
+                )),
             };
         }
 

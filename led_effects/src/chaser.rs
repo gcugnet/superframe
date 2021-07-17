@@ -22,62 +22,47 @@ pub trait OneParameterChaser<Color, const N: usize>: Chaser<N> {
 }
 
 /// Container enum for one-parameter chasers.
-pub enum OneParameterChaserEnum<const N: usize> {
-    Unicolor(RainbowChaser<Unicolor<Hsv, N>, N>),
-    Rainbow(RainbowChaser<Rainbow<N>, N>),
+pub enum ChaserEnum<const N: usize> {
+    RainbowUnicolor(RainbowChaser<Unicolor<Hsv, N>, N>),
+    DoubleRainbow(RainbowChaser<Rainbow<N>, N>),
 }
 
 impl<const N: usize> From<RainbowChaser<Unicolor<Hsv, N>, N>>
-    for OneParameterChaserEnum<N>
+    for ChaserEnum<N>
 {
     fn from(chaser: RainbowChaser<Unicolor<Hsv, N>, N>) -> Self {
-        OneParameterChaserEnum::Unicolor(chaser)
+        ChaserEnum::RainbowUnicolor(chaser)
     }
 }
 
-impl<const N: usize> From<RainbowChaser<Rainbow<N>, N>>
-    for OneParameterChaserEnum<N>
-{
+impl<const N: usize> From<RainbowChaser<Rainbow<N>, N>> for ChaserEnum<N> {
     fn from(chaser: RainbowChaser<Rainbow<N>, N>) -> Self {
-        OneParameterChaserEnum::Rainbow(chaser)
+        ChaserEnum::DoubleRainbow(chaser)
     }
 }
 
-impl<const N: usize> Chaser<N> for OneParameterChaserEnum<N> {
+impl<const N: usize> Chaser<N> for ChaserEnum<N> {
     fn set_time_config(&mut self, time_config: &TimeConfig) {
         match self {
-            OneParameterChaserEnum::Unicolor(chaser) => {
+            ChaserEnum::RainbowUnicolor(chaser) => {
                 chaser.set_time_config(time_config)
             }
-            OneParameterChaserEnum::Rainbow(chaser) => {
+            ChaserEnum::DoubleRainbow(chaser) => {
                 chaser.set_time_config(time_config)
             }
         }
     }
 }
 
-impl<Color: Into<Hsv>, const N: usize> OneParameterChaser<Color, N>
-    for OneParameterChaserEnum<N>
-{
-    fn new(start_color: Color, time_config: &TimeConfig) -> Self {
-        OneParameterChaserEnum::Unicolor(RainbowChaser::new(
-            start_color,
-            time_config,
-        ))
-    }
-}
-
-impl<const N: usize> Iterator for OneParameterChaserEnum<N> {
+impl<const N: usize> Iterator for ChaserEnum<N> {
     type Item = OneParameterSequenceEnum<N>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            OneParameterChaserEnum::Unicolor(chaser) => {
+            ChaserEnum::RainbowUnicolor(chaser) => {
                 chaser.next().map(Into::into)
             }
-            OneParameterChaserEnum::Rainbow(chaser) => {
-                chaser.next().map(Into::into)
-            }
+            ChaserEnum::DoubleRainbow(chaser) => chaser.next().map(Into::into),
         }
     }
 }
