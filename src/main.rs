@@ -238,7 +238,12 @@ const APP: () = {
 
         let chaser = cx.resources.chaser;
 
-        let transition_ms = 12_500 - (value2 as u32) * 3;
+        let transition_ms = if mode == Mode::Unicolor {
+            12_500 - (value2 as u32) * 3
+        } else {
+            13_000 - (value2 as u32) * 3
+        };
+
         time_config.transition_time = Milliseconds(transition_ms).into();
         chaser.set_time_config(time_config);
 
