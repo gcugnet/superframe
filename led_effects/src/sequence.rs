@@ -1,9 +1,11 @@
 //! A collection of LED sequences on top of `smart_leds`.
 
+mod color_path;
 mod gradient;
 mod rainbow;
 mod unicolor;
 
+pub use color_path::ColorPath;
 pub use gradient::Gradient;
 pub use rainbow::Rainbow;
 pub use unicolor::Unicolor;
@@ -21,6 +23,13 @@ pub trait OneParameterSequence<Color, const N: usize>: Sequence<N> {
 /// A LED sequence with two parameters.
 pub trait TwoParameterSequence<Color, const N: usize>: Sequence<N> {
     fn new(color1: Color, color2: Color) -> Self;
+}
+
+/// A LED sequence working on a color array.
+pub trait ArraySequence<Color, const N: usize, const M: usize>:
+    Sequence<N>
+{
+    fn new(colors: [Color; M]) -> Self;
 }
 
 /// Container enum for one-parameter sequences.
