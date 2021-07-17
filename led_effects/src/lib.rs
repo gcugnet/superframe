@@ -4,3 +4,4 @@
 
 pub mod chaser;
 pub mod sequence;
+pub mod time;

@@ -22,13 +22,18 @@ use stm32l4xx_hal::{
     spi::Spi,
 };
 
-use smart_leds::{brightness, colors::*, hsv::Hsv, SmartLedsWrite, RGB8};
-use ws2812_spi::prerendered::Ws2812;
-
-use led_effects::chaser::{
-    Chaser, OneParameterChaser, OneParameterChaserEnum, RainbowChaser,
+use embedded_time::{
+    duration::{Milliseconds, Seconds},
+    rate::Hertz,
 };
-use led_effects::sequence::{Gradient, Rainbow, Unicolor};
+use led_effects::{
+    chaser::{
+        Chaser, OneParameterChaser, OneParameterChaserEnum, RainbowChaser,
+    },
+    time::TimeConfig,
+};
+use smart_leds::{brightness, colors::*, SmartLedsWrite};
+use ws2812_spi::prerendered::Ws2812;
 
 // on utilise un SPI2
 // la broche qui mintéresse : MOSI
@@ -90,6 +95,7 @@ const HEIGHT: usize = 56;
 const NUM_LEDS: usize = (WIDTH + HEIGHT) * 2;
 const BUFFER_SIZE: usize = NUM_LEDS * 12 + 20;
 const MEAN_ITERATIONS: u16 = 200;
+const REFRESH_RATE: Hertz = Hertz(50);
 
 #[app(device = stm32l4xx_hal::pac, peripherals = true, monotonic = rtic::cyccnt::CYCCNT)]
 const APP: () = {
@@ -103,6 +109,8 @@ const APP: () = {
         ws2812b: Ws2812<'static, Spi2>,
         mode: Mode,
         chaser: OneParameterChaserEnum<NUM_LEDS>,
+        time_config: TimeConfig,
+        clocks: Clocks,
     }
 
     #[init(schedule = [next_sequence], resources = [led_buffer])]
@@ -156,7 +164,8 @@ const APP: () = {
         let ws2812b = Ws2812::new(spi, cx.resources.led_buffer);
 
         // Configure the chaser.
-        let chaser = RainbowChaser::new(ORANGE, 200);
+        let time_config = TimeConfig::new(REFRESH_RATE, Seconds(2));
+        let chaser = RainbowChaser::new(ORANGE, &time_config);
 
         cx.schedule.next_sequence(cx.start).unwrap();
 
@@ -168,6 +177,8 @@ const APP: () = {
             ws2812b,
             mode: Mode::Rainbow,
             chaser: OneParameterChaserEnum::Rainbow(chaser),
+            time_config,
+            clocks,
         }
     }
 
@@ -187,6 +198,8 @@ const APP: () = {
             potentiometer2,
             potentiometer3,
             mode,
+            time_config,
+            clocks,
         ],
         schedule = [next_sequence]
     )]
@@ -206,26 +219,32 @@ const APP: () = {
             Mode::Rainbow
         };
 
+        let time_config = cx.resources.time_config;
+
         if mode != *cx.resources.mode {
             *cx.resources.mode = mode;
             *cx.resources.chaser = match mode {
                 Mode::Unicolor => OneParameterChaserEnum::Unicolor(
-                    RainbowChaser::new(ORANGE, 200),
+                    RainbowChaser::new(ORANGE, time_config),
                 ),
                 Mode::Rainbow => OneParameterChaserEnum::Rainbow(
-                    RainbowChaser::new(ORANGE, 200),
+                    RainbowChaser::new(ORANGE, time_config),
                 ),
             };
         }
 
         let chaser = cx.resources.chaser;
 
-        let step_number = (value2 / 5) + 15;
-        chaser.set_step_number(step_number.into());
+        let transition_ms = 12_500 - (value2 as u32) * 3;
+        time_config.transition_time = Milliseconds(transition_ms).into();
+        chaser.set_time_config(time_config);
 
         if let Some(sequence) = chaser.next() {
+            let num_cycles = cx.resources.clocks.sysclk().0
+                / time_config.refresh_rate.0 as u32;
+
             cx.schedule
-                .next_sequence(Instant::now() + 1_600_000.cycles())
+                .next_sequence(Instant::now() + num_cycles.cycles())
                 .unwrap();
 
             let value1: u16 = adc.read_mean(potentiometer1, MEAN_ITERATIONS);

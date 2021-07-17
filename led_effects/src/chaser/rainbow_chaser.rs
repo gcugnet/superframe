@@ -3,16 +3,16 @@ use core::marker::PhantomData;
 use smart_leds::hsv::Hsv;
 
 use super::{Chaser, OneParameterChaser};
-use crate::sequence::OneParameterSequence;
+use crate::{sequence::OneParameterSequence, time::TimeConfig};
 
 /// A chaser that loops on the wheel of hues.
 pub struct RainbowChaser<S: OneParameterSequence<Hsv, N>, const N: usize> {
     /// The start color.
     start_color: Hsv,
     /// The number of steps in a loop.
-    step_number: usize,
+    step_number: u32,
     /// The current step.
-    step: usize,
+    step: u32,
 
     // Placeholder for the sequence type.
     _sequence: PhantomData<S>,
@@ -21,7 +21,8 @@ pub struct RainbowChaser<S: OneParameterSequence<Hsv, N>, const N: usize> {
 impl<S: OneParameterSequence<Hsv, N>, const N: usize> Chaser<N>
     for RainbowChaser<S, N>
 {
-    fn set_step_number(&mut self, step_number: usize) {
+    fn set_time_config(&mut self, time_config: &TimeConfig) {
+        let step_number = time_config.transition_steps();
         self.step = self.step * step_number / self.step_number;
         self.step_number = step_number;
     }
@@ -30,10 +31,10 @@ impl<S: OneParameterSequence<Hsv, N>, const N: usize> Chaser<N>
 impl<Color: Into<Hsv>, S: OneParameterSequence<Hsv, N>, const N: usize>
     OneParameterChaser<Color, N> for RainbowChaser<S, N>
 {
-    fn new(start_color: Color, step_number: usize) -> Self {
+    fn new(start_color: Color, time_config: &TimeConfig) -> Self {
         Self {
             start_color: start_color.into(),
-            step_number,
+            step_number: time_config.transition_steps(),
             step: 0,
             _sequence: PhantomData,
         }

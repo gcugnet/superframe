@@ -1,8 +1,14 @@
 [package]
 name = "led_effects"
 version = "0.1.0"
-authors = ["Guillaume Cugnet <guillaume.cugnet@gmail.com>"]
+authors = [
+    "Guillaume Cugnet <guillaume.cugnet@gmail.com>",
+    "Jean-Philippe Cugnet <jean-philippe@cugnet.eu>",
+]
 edition = "2018"
+
+[dependencies]
+embedded-time = "0.12.0"
 
 [dependencies.smart-leds]
 git = "https://github.com/legrec14/smart-leds.git"

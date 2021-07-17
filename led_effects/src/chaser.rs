@@ -4,17 +4,21 @@ mod rainbow_chaser;
 
 pub use rainbow_chaser::RainbowChaser;
 
-use crate::sequence::{OneParameterSequenceEnum, Rainbow, Unicolor};
+use crate::{
+    sequence::{OneParameterSequenceEnum, Rainbow, Unicolor},
+    time::TimeConfig,
+};
+
 use smart_leds::hsv::Hsv;
 
 /// A LED chaser.
 pub trait Chaser<const N: usize>: Iterator {
-    fn set_step_number(&mut self, step_number: usize);
+    fn set_time_config(&mut self, time_config: &TimeConfig);
 }
 
 /// A LED chaser with one parameter.
 pub trait OneParameterChaser<Color, const N: usize>: Chaser<N> {
-    fn new(start_color: Color, step_number: usize) -> Self;
+    fn new(start_color: Color, time_config: &TimeConfig) -> Self;
 }
 
 /// Container enum for one-parameter chasers.
@@ -40,13 +44,13 @@ impl<const N: usize> From<RainbowChaser<Rainbow<N>, N>>
 }
 
 impl<const N: usize> Chaser<N> for OneParameterChaserEnum<N> {
-    fn set_step_number(&mut self, step_number: usize) {
+    fn set_time_config(&mut self, time_config: &TimeConfig) {
         match self {
             OneParameterChaserEnum::Unicolor(chaser) => {
-                chaser.set_step_number(step_number)
+                chaser.set_time_config(time_config)
             }
             OneParameterChaserEnum::Rainbow(chaser) => {
-                chaser.set_step_number(step_number)
+                chaser.set_time_config(time_config)
             }
         }
     }
@@ -55,10 +59,10 @@ impl<const N: usize> Chaser<N> for OneParameterChaserEnum<N> {
 impl<Color: Into<Hsv>, const N: usize> OneParameterChaser<Color, N>
     for OneParameterChaserEnum<N>
 {
-    fn new(start_color: Color, step_number: usize) -> Self {
+    fn new(start_color: Color, time_config: &TimeConfig) -> Self {
         OneParameterChaserEnum::Unicolor(RainbowChaser::new(
             start_color,
-            step_number,
+            time_config,
         ))
     }
 }
