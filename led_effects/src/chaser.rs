@@ -1,8 +1,10 @@
 //! A collection of LED chasers on top of `smart_leds`.
 
 mod rainbow_chaser;
+mod unicolor_transition;
 
 pub use rainbow_chaser::RainbowChaser;
+pub use unicolor_transition::UnicolorTransition;
 
 use crate::{
     sequence::{OneParameterSequenceEnum, Rainbow, Unicolor},
@@ -19,6 +21,11 @@ pub trait Chaser<const N: usize>: Iterator {
 /// A LED chaser with one parameter.
 pub trait OneParameterChaser<Color, const N: usize>: Chaser<N> {
     fn new(start_color: Color, time_config: &TimeConfig) -> Self;
+}
+
+/// A LED chaser with two parameters.
+pub trait TwoParameterChaser<Color, const N: usize>: Chaser<N> {
+    fn new(color1: Color, color2: Color, time_config: &TimeConfig) -> Self;
 }
 
 /// Container enum for one-parameter chasers.
