@@ -27,9 +27,13 @@ use embedded_time::{
     rate::Hertz,
 };
 use led_effects::{
-    chaser::{Chaser, ChaserEnum, OneParameterChaser, RainbowChaser},
+    chaser::{
+        Chaser, ChaserEnum, OneParameterChaser, RainbowChaser, RandomUnicolor,
+        SimpleRandomChaser,
+    },
     time::TimeConfig,
 };
+use rand::distributions::Uniform;
 use smart_leds::{brightness, colors::*, SmartLedsWrite};
 use ws2812_spi::prerendered::Ws2812;
 
@@ -222,8 +226,8 @@ const APP: () = {
         if mode != *cx.resources.mode {
             *cx.resources.mode = mode;
             *cx.resources.chaser = match mode {
-                Mode::Unicolor => ChaserEnum::RainbowUnicolor(
-                    RainbowChaser::new(ORANGE, time_config),
+                Mode::Unicolor => ChaserEnum::RandomUnicolor(
+                    RandomUnicolor::new(REFRESH_RATE, Uniform::new(300, 5_000)),
                 ),
                 Mode::Rainbow => ChaserEnum::DoubleRainbow(RainbowChaser::new(
                     ORANGE,

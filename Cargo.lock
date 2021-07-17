@@ -489,6 +489,7 @@ dependencies = [
  "led_effects",
  "nb 1.0.0",
  "panic-rtt-target",
+ "rand",
  "rtt-target 0.3.0",
  "smart-leds",
  "stm32l4xx-hal",

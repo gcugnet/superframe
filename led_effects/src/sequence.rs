@@ -25,13 +25,20 @@ pub trait TwoParameterSequence<Color, const N: usize>: Sequence<N> {
 
 /// Container enum for one-parameter sequences.
 pub enum OneParameterSequenceEnum<const N: usize> {
-    Unicolor(Unicolor<Hsv, N>),
+    UnicolorRgb8(Unicolor<RGB8, N>),
+    UnicolorHsv(Unicolor<Hsv, N>),
     Rainbow(Rainbow<N>),
+}
+
+impl<const N: usize> From<Unicolor<RGB8, N>> for OneParameterSequenceEnum<N> {
+    fn from(sequence: Unicolor<RGB8, N>) -> Self {
+        OneParameterSequenceEnum::UnicolorRgb8(sequence)
+    }
 }
 
 impl<const N: usize> From<Unicolor<Hsv, N>> for OneParameterSequenceEnum<N> {
     fn from(sequence: Unicolor<Hsv, N>) -> Self {
-        OneParameterSequenceEnum::Unicolor(sequence)
+        OneParameterSequenceEnum::UnicolorHsv(sequence)
     }
 }
 
@@ -48,7 +55,8 @@ impl<const N: usize> Iterator for OneParameterSequenceEnum<N> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            OneParameterSequenceEnum::Unicolor(sequence) => sequence.next(),
+            OneParameterSequenceEnum::UnicolorRgb8(sequence) => sequence.next(),
+            OneParameterSequenceEnum::UnicolorHsv(sequence) => sequence.next(),
             OneParameterSequenceEnum::Rainbow(sequence) => sequence.next(),
         }
     }
