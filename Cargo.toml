@@ -1,24 +1,49 @@
 [package]
 name = "superframe"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Guillaume Cugnet <guillaume.cugnet@gmail.com>"]
+license = "GPL-3.0-or-later"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
+cortex-m = "0.7.2"
 cortex-m-rt = "0.6.13"
 cortex-m-rtic = "0.5.5"
+embedded-hal = "0.2.4"
+embedded-time = "0.12.0"
+led_effects = { path = "led_effects", features = ["rand"] }
+nb = "1.0.0"
+panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
 rtt-target = { version = "0.3.0", features = ["cortex-m"] }
+ws2812-spi = { version = "0.4.0" }
+
+[dependencies.smart-leds]
+git = "https://github.com/legrec14/smart-leds.git"
+branch = "hsv-conversions"
 
 [dependencies.stm32l4xx-hal]
 git = "https://github.com/ejpcmac/stm32l4xx-hal.git"
 branch = "stm32l47x-adc"
 features = ["stm32l4x6", "rt"]
 
+[dependencies.rand]
+version = "0.8.4"
+default-features = false
+features = ["small_rng"]
+
 # For `cargo fix` to work.
 [[bin]]
 name = "superframe"
 test = false
 bench = false
+
+[profile.release]
+opt-level = "s"
+codegen-units = 1
+lto = true
+debug = true
+
+[workspace]
+members = [ "led_effects" ]
